@@ -3,11 +3,15 @@ from rest_framework.response import Response
 from .models import *
 from .serializers import *
 from django.utils.timezone import now
+from django.utils.timezone import now, localtime
 
 class FitnessClassListView(APIView):
     def get(self, request):
-        classes =  FitnessClass.objects.filter(datetime__gte =now()).order_by('datetime')
-        serializer = FitnessClassesSerializers(classes,many = True)
+        classes = FitnessClass.objects.filter(datetime__gte=now()).order_by('datetime')
+        serializer = FitnessClassesSerializers(classes, many=True)
+        for c in serializer.data:
+            dt = FitnessClass.objects.get(id=c['id']).datetime
+            c['datetime'] = localtime(dt).strftime('%Y-%m-%d %H:%M:%S') 
         return Response(serializer.data)
     
 
@@ -30,7 +34,7 @@ class BookClass(APIView):
                 fitness_class.available_slots -= 1
                 fitness_class.save()
 
-                return Response(BookingSerializer(booking).data, status=201)
+                return Response(BookingSerializer(booking).data, status=201) 
             except FitnessClass.DoesNotExist:
                 return Response({'error': 'Fitness class not found'}, status=404)
         return Response(serializer.errors, status=400)
