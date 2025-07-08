@@ -20,11 +20,14 @@ class BookClass(APIView):
         serializer = BookingCreateSerializer(data=request.data)
         if serializer.is_valid():
             class_id = serializer.validated_data['class_id']
+            if not isinstance(class_id, int):
+                return Response({"error": "class_id must be an integer"}, status=400)
+
             try:
                 fitness_class = FitnessClass.objects.get(id=class_id)
                 if fitness_class.available_slots <= 0:
                     return Response({'error': 'No available slots'}, status=400)
-                
+
                 booking = Booking.objects.create(
                     fitness_class=fitness_class,
                     client_name=serializer.validated_data['client_name'],
@@ -34,11 +37,11 @@ class BookClass(APIView):
                 fitness_class.available_slots -= 1
                 fitness_class.save()
 
-                return Response(BookingSerializer(booking).data, status=201) 
+                return Response(BookingSerializer(booking).data, status=201)
             except FitnessClass.DoesNotExist:
                 return Response({'error': 'Fitness class not found'}, status=404)
         return Response(serializer.errors, status=400)
-    
+
 
 class BookingListView(APIView):
     def get(self, request):
