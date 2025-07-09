@@ -19,3 +19,4 @@ class Booking(models.Model):
 
     def __str__(self):
         return f"{self.client_email} booked {self.fitness_class.name}"
+    
